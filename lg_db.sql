@@ -571,9 +571,49 @@ CREATE TABLE IF NOT EXISTS `inventory_entries` (
   CONSTRAINT `inventory_entries_ibfk_2` FOREIGN KEY (`shop_id`) REFERENCES `shops` (`id`),
   CONSTRAINT `inventory_entries_ibfk_3` FOREIGN KEY (`branch_id`) REFERENCES `branches` (`id`),
   CONSTRAINT `inventory_entries_ibfk_4` FOREIGN KEY (`item_id`) REFERENCES `items` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=48 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table lg.inventory_entries: ~0 rows (approximately)
+-- Dumping data for table lg.inventory_entries: ~21 rows (approximately)
+INSERT INTO `inventory_entries` (`id`, `entry_date`, `user_id`, `shop_id`, `branch_id`, `item_id`, `amount`, `notes`, `created_at`) VALUES
+	(9, '2025-07-27 00:00:00', 1, 17, 48, 2, 1, NULL, '2025-07-27 19:57:51'),
+	(10, '2025-07-28 00:00:00', 1, 1, 1, 49, 1, NULL, '2025-07-28 03:50:33'),
+	(11, '2025-07-28 00:00:00', 1, 1, 1, 478, 12, NULL, '2025-07-28 03:52:00'),
+	(12, '2025-07-28 00:00:00', 1, 17, 61, 136, 1, NULL, '2025-07-28 07:29:09'),
+	(13, '2025-07-28 00:00:00', 1, 17, 61, 62, 1, NULL, '2025-07-28 07:29:24'),
+	(14, '2025-07-28 00:00:00', 1, 17, 61, 21, 1, NULL, '2025-07-28 07:32:02'),
+	(15, '2025-07-28 00:00:00', 1, 17, 61, 49, 1, NULL, '2025-07-28 07:32:23'),
+	(16, '2025-07-28 00:00:00', 1, 17, 61, 48, 1, NULL, '2025-07-28 07:40:32'),
+	(17, '2025-07-28 00:00:00', 1, 17, 61, 12, 1, NULL, '2025-07-28 07:40:40'),
+	(18, '2025-07-28 00:00:00', 1, 17, 61, 50, 1, NULL, '2025-07-28 07:40:51'),
+	(19, '2025-07-28 00:00:00', 1, 17, 61, 478, 10, NULL, '2025-07-28 07:42:39'),
+	(20, '2025-07-28 00:00:00', 1, 17, 61, 210, 1, NULL, '2025-07-28 07:42:56'),
+	(21, '2025-07-28 00:00:00', 1, 3, 3, 269, 1, NULL, '2025-07-28 07:45:00'),
+	(22, '2025-07-28 00:00:00', 1, 3, 3, 479, 7, NULL, '2025-07-28 07:45:17'),
+	(23, '2025-07-28 00:00:00', 1, 1, 1, 446, 1, NULL, '2025-07-28 08:00:18'),
+	(24, '2025-07-28 00:00:00', 1, 1, 1, 447, 1, NULL, '2025-07-28 08:00:29'),
+	(25, '2025-07-28 00:00:00', 1, 1, 1, 443, 1, NULL, '2025-07-28 08:01:02'),
+	(26, '2025-07-28 00:00:00', 1, 1, 1, 445, 1, NULL, '2025-07-28 08:01:14'),
+	(27, '2025-07-28 00:00:00', 1, 1, 1, 481, 66, NULL, '2025-07-28 08:01:29'),
+	(28, '2025-07-28 00:00:00', 1, 3, 3, 268, 1, NULL, '2025-07-28 08:02:31'),
+	(29, '2025-07-28 00:00:00', 1, 3, 3, 310, 1, NULL, '2025-07-28 08:02:39'),
+	(30, '2025-07-28 00:00:00', 1, 1, 1, 476, 1, NULL, '2025-07-28 08:13:36'),
+	(31, '2025-07-28 00:00:00', 1, 1, 1, 470, 1, NULL, '2025-07-28 08:13:52'),
+	(32, '2025-07-28 00:00:00', 1, 5, 6, 353, 1, NULL, '2025-07-28 08:22:41'),
+	(33, '2025-07-28 00:00:00', 1, 5, 6, 426, 1, NULL, '2025-07-28 08:22:47'),
+	(34, '2025-07-28 00:00:00', 1, 5, 6, 480, 22, NULL, '2025-07-28 08:22:58'),
+	(35, '2025-07-28 00:00:00', 1, 10, 21, 478, 6, NULL, '2025-07-28 08:26:45'),
+	(36, '2025-07-28 00:00:00', 1, 1, 1, 450, 1, NULL, '2025-07-28 09:11:17'),
+	(37, '2025-07-28 00:00:00', 1, 3, 3, 327, 1, NULL, '2025-07-28 09:22:49'),
+	(38, '2025-07-28 00:00:00', 1, 17, 45, 330, 1, 'dreck', '2025-07-28 09:39:32'),
+	(39, '2025-07-28 00:00:00', 1, 17, 47, 446, 1, 'asas', '2025-07-28 09:44:07'),
+	(40, '2025-07-28 00:00:00', 1, 17, 47, 447, 1, 'mh8', '2025-07-28 09:44:24'),
+	(41, '2025-07-28 00:00:00', 1, 17, 47, 481, 12, NULL, '2025-07-28 09:44:42'),
+	(42, '2025-07-28 00:00:00', 1, 17, 47, 445, 1, NULL, '2025-07-28 09:45:00'),
+	(43, '2025-07-28 00:00:00', 1, 17, 39, 31, 1, 'Fack', '2025-07-28 10:03:06'),
+	(44, '2025-07-28 00:00:00', 1, 10, 20, 445, 1, NULL, '2025-07-28 10:21:25'),
+	(45, '2025-07-28 00:00:00', 1, 25, 95, 478, 33, NULL, '2025-07-28 10:23:42'),
+	(46, '2025-07-28 00:00:00', 1, 17, 62, 18, 1, 'Ggg', '2025-07-28 10:27:42'),
+	(47, '2025-07-28 00:00:00', 1, 45, 160, 153, 1, 'Yyy', '2025-07-28 10:35:37');
 
 -- Dumping structure for table lg.items
 CREATE TABLE IF NOT EXISTS `items` (
@@ -590,7 +630,7 @@ CREATE TABLE IF NOT EXISTS `items` (
   CONSTRAINT `items_ibfk_2` FOREIGN KEY (`company_id`) REFERENCES `companies` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=482 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table lg.items: ~0 rows (approximately)
+-- Dumping data for table lg.items: ~481 rows (approximately)
 INSERT INTO `items` (`id`, `item_code`, `product_category_id`, `company_id`, `created_at`) VALUES
 	(1, 'R-4D760MDUP', 1, 1, '2025-07-27 09:42:49'),
 	(2, 'GR-X920INS', 1, 1, '2025-07-27 09:42:49'),
@@ -1274,9 +1314,11 @@ CREATE TABLE IF NOT EXISTS `users` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Dumping data for table lg.users: ~0 rows (approximately)
+-- Dumping data for table lg.users: ~1 rows (approximately)
+INSERT INTO `users` (`id`, `name`, `created_at`, `updated_at`) VALUES
+	(1, 'Elishay', '2025-07-27 12:12:34', '2025-07-27 12:37:17');
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
