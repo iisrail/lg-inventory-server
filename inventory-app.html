@@ -29,43 +29,43 @@
         .header {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
             color: white;
-            padding: 20px 15px;
+            padding: 15px;
             text-align: center;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .header h1 {
-            font-size: 1.4em;
+            font-size: 1.2em;
             font-weight: 600;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
 
         .header p {
-            font-size: 0.9em;
+            font-size: 0.8em;
             opacity: 0.9;
         }
 
         .form-container {
-            padding: 25px 20px 120px 20px;
+            padding: 15px 15px 180px 15px;
         }
 
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 18px;
         }
 
         .form-label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
             font-weight: 600;
             color: #333;
-            font-size: 16px;
+            font-size: 14px;
         }
 
         .form-control {
             width: 100%;
-            padding: 18px 15px;
+            padding: 12px 10px;
             border: 2px solid #e1e5e9;
-            border-radius: 12px;
+            border-radius: 8px;
             font-size: 16px;
             background: white;
             transition: border-color 0.3s ease;
@@ -159,17 +159,18 @@
 
         .status-message {
             position: fixed;
-            top: 80px;
-            left: 15px;
-            right: 15px;
-            padding: 15px;
-            border-radius: 12px;
+            top: 60px;
+            left: 10px;
+            right: 10px;
+            padding: 12px;
+            border-radius: 8px;
             font-weight: 500;
             text-align: center;
             z-index: 1000;
-            transform: translateY(-100px);
+            transform: translateY(-80px);
             opacity: 0;
             transition: all 0.3s ease;
+            font-size: 14px;
         }
 
         .status-message.show {
@@ -295,7 +296,7 @@
 
         <!-- Main Form -->
         <div class="form-container">
-            <form id="inventoryForm">
+            <form id="inventoryForm" autocomplete="off">
                 <!-- Step 1: Shop -->
                 <div class="form-group">
                     <label class="form-label" for="shop">1. Shop *</label>
@@ -331,7 +332,7 @@
                 <!-- Step 5a: Amount (if ALL company) -->
                 <div class="form-group amount-field" id="amountField">
                     <label class="form-label" for="amount">5. Total Amount *</label>
-                    <input type="number" class="form-control" id="amount" min="0" placeholder="Enter total count">
+                    <input type="number" class="form-control" id="amount" min="0" placeholder="Enter total count" autocomplete="off">
                 </div>
 
                 <!-- Step 5b: Item (if specific company) -->
@@ -340,6 +341,13 @@
                     <select class="form-control" id="item">
                         <option value="">Select Item</option>
                     </select>
+                </div>
+
+                <!-- Step 6: Notes (optional) -->
+                <div class="form-group">
+                    <label class="form-label" for="notes">6. Notes (optional)</label>
+                    <input type="text" class="form-control" id="notes" placeholder="Add notes..." 
+                           autocomplete="off" autocorrect="off" spellcheck="false" onfocus="scrollToNotes()">
                 </div>
             </form>
         </div>
@@ -381,8 +389,8 @@
     </div>
 
     <script>
-        // API Configuration
-        const API_BASE = 'http://localhost:3000/api';
+        // API Configuration - Use relative URLs for mobile compatibility
+        const API_BASE = '/api';
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
@@ -562,7 +570,8 @@
                 shop: document.getElementById('shop').value,
                 branch: document.getElementById('branch').value,
                 productCategory: document.getElementById('productCategory').value,
-                company: document.getElementById('company').value
+                company: document.getElementById('company').value,
+                notes: document.getElementById('notes').value || null
             };
             
             if (data.company === 'ALL') {
@@ -585,13 +594,16 @@
                 if (response.ok) {
                     showStatus(`✅ ${result.message}`, 'success');
                     
-                    // Reset only company, amount, and item fields
-                    // Keep shop, branch, and category
-                    document.getElementById('company').value = '';
+                    // FIXED: Don't reset company or clear item combo
+                    // Keep shop, branch, category, company AND item options
                     document.getElementById('amount').value = '';
-                    document.getElementById('item').innerHTML = '<option value="">Select Item</option>';
+                    document.getElementById('item').value = ''; // Reset selection but keep options
+                    document.getElementById('notes').value = '';
                     document.getElementById('amountField').classList.remove('show');
                     document.getElementById('itemField').classList.remove('show');
+                    
+                    // Re-trigger company change to show appropriate field
+                    onCompanyChange();
                     
                     checkFormComplete();
                 } else {
@@ -612,7 +624,7 @@
             document.getElementById('choiceModal').classList.remove('show');
         }
 
-        // Download work based on choice
+        // Download work based on choice (OPTIMIZED)
         async function downloadWork(scope) {
             closeChoiceModal();
             
@@ -622,16 +634,10 @@
                 // Get today's date in YYYY-MM-DD format
                 const today = new Date().toISOString().split('T')[0];
                 
-                // Fetch today's inventory entries
-                const response = await fetch(`${API_BASE}/inventory-entries?limit=1000`);
-                const allEntries = await response.json();
+                // Build API URL with filters
+                let apiUrl = `${API_BASE}/inventory-entries?limit=1000&date=${today}`;
                 
-                // Filter entries for today only
-                let todaysEntries = allEntries.filter(entry => 
-                    entry.entry_date.split('T')[0] === today
-                );
-                
-                // If scope is 'branch', filter by current branch
+                // Add branch filter if scope is 'branch'
                 if (scope === 'branch') {
                     const currentShop = document.getElementById('shop').value;
                     const currentBranch = document.getElementById('branch').value;
@@ -641,9 +647,17 @@
                         return;
                     }
                     
-                    todaysEntries = todaysEntries.filter(entry => 
-                        entry.shop === currentShop && entry.branch === currentBranch
-                    );
+                    // Add shop and branch filters to URL
+                    apiUrl += `&shop=${encodeURIComponent(currentShop)}&branch=${encodeURIComponent(currentBranch)}`;
+                }
+                
+                // Fetch filtered entries directly from database
+                const response = await fetch(apiUrl);
+                const todaysEntries = await response.json();
+                
+                if (!Array.isArray(todaysEntries)) {
+                    showStatus('❌ Invalid data received from server', 'error');
+                    return;
                 }
                 
                 if (todaysEntries.length === 0) {
@@ -666,19 +680,45 @@
         }
 
         function generateTodaysWorkExcel(entries, date, scope) {
-            // Prepare Excel data with headers
+            // UPDATED: New column structure without Type, with Amount and Notes
             const headers = [
                 'Time', 'Shop', 'Branch', 'Category', 
-                'Company', 'Item/Total', 'Type', 'PIC'
+                'Company', 'Item', 'Amount', 'Notes', 'PIC'
             ];
             
-            // Convert entries to Excel rows
+            // Convert entries to Excel rows with updated column structure
             const excelData = entries.map(entry => {
-                const time = new Date(entry.entry_date).toLocaleTimeString('en-US', {
-                    hour12: false,
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+                // Time formatting from created_at
+                let time = '00:00';
+                
+                try {
+                    const entryDate = new Date(entry.entry_date);
+                    
+                    if (!isNaN(entryDate.getTime())) {
+                        const hours = entryDate.getHours().toString().padStart(2, '0');
+                        const minutes = entryDate.getMinutes().toString().padStart(2, '0');
+                        time = `${hours}:${minutes}`;
+                    }
+                } catch (error) {
+                    console.error('Error parsing date:', entry.entry_date, error);
+                    const now = new Date();
+                    const hours = now.getHours().toString().padStart(2, '0');
+                    const minutes = now.getMinutes().toString().padStart(2, '0');
+                    time = `${hours}:${minutes}`;
+                }
+                
+                // UPDATED: Item and Amount logic
+                let itemValue = '';
+                let amountValue = '';
+                
+                if (entry.company === 'ALL') {
+                    // Category Total: show amount
+                    amountValue = entry.amount.toString();
+                } else {
+                    // Individual Item: show item code and amount = 1
+                    itemValue = entry.item || '';
+                    amountValue = '1';
+                }
                 
                 return [
                     time,
@@ -686,8 +726,9 @@
                     entry.branch,
                     entry.category,
                     entry.company,
-                    entry.company === 'ALL' ? `${entry.amount} total` : entry.item,
-                    entry.company === 'ALL' ? 'Category Total' : 'Item Found',
+                    itemValue,     // Item column (empty for category totals)
+                    amountValue,   // Amount column (1 for items, actual number for totals)
+                    entry.notes || '',  // Notes column
                     entry.pic
                 ];
             });
@@ -739,6 +780,17 @@
         function hideStatus() {
             const statusDiv = document.getElementById('statusMessage');
             statusDiv.classList.remove('show');
+        }
+
+        // Scroll Notes field into view when keyboard appears
+        function scrollToNotes() {
+            setTimeout(() => {
+                const notesField = document.getElementById('notes');
+                notesField.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }, 300); // Small delay to let keyboard appear
         }
     </script>
 </body>

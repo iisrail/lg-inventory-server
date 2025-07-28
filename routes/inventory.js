@@ -11,7 +11,7 @@ router.post('/add-inventory', async (req, res) => {
     try {
         await connection.beginTransaction();
         
-        const { shop, branch, productCategory, company, item, amount } = req.body;
+        const { shop, branch, productCategory, company, item, amount, notes } = req.body;
         
         // Basic validation
         const validation = validateInventoryFields(req.body);
@@ -88,9 +88,9 @@ router.post('/add-inventory', async (req, res) => {
             
             await connection.execute(`
                 UPDATE inventory_entries 
-                SET amount = ?, entry_date = CURDATE()
+                SET amount = ?, notes = ?, entry_date = CURDATE()
                 WHERE id = ?
-            `, [finalAmount, existingId]);
+            `, [finalAmount, notes, existingId]);
             
             result = { insertId: existingId };
             action = 'updated';
@@ -99,9 +99,9 @@ router.post('/add-inventory', async (req, res) => {
             // INSERT new record
             const [insertResult] = await connection.execute(`
                 INSERT INTO inventory_entries 
-                (user_id, shop_id, branch_id, item_id, amount, entry_date) 
-                VALUES (?, ?, ?, ?, ?, CURDATE())
-            `, [USER_ID, shopId, branchId, itemId, finalAmount]);
+                (user_id, shop_id, branch_id, item_id, amount, notes, entry_date) 
+                VALUES (?, ?, ?, ?, ?, ?, CURDATE())
+            `, [USER_ID, shopId, branchId, itemId, finalAmount, notes]);
             
             result = insertResult;
             action = 'created';
@@ -138,6 +138,7 @@ router.post('/add-inventory', async (req, res) => {
                 branch: branch,
                 category: productCategory,
                 date: today,
+                notes: notes,
                 ...(mode === 'item' ? { 
                     company: company, 
                     item: item, 
@@ -158,78 +159,6 @@ router.post('/add-inventory', async (req, res) => {
     }
 });
 
-// Delete inventory item entry
-router.delete('/delete-inventory', async (req, res) => {
-    const connection = await pool.getConnection();
-    
-    try {
-        await connection.beginTransaction();
-        
-        const { shop, branch, productCategory, company, item } = req.body;
-        
-        // Basic validation for delete
-        if (!shop || !branch || !productCategory || !company || !item) {
-            return res.status(400).json({
-                error: 'Missing required fields: shop, branch, productCategory, company, item'
-            });
-        }
-        
-        // Only works for item mode (not category totals)
-        if (company === 'ALL') {
-            return res.status(400).json({
-                error: ERROR_MESSAGES.CANNOT_DELETE_CATEGORY
-            });
-        }
-        
-        // Get IDs
-        const shopId = await getShopId(connection, shop);
-        const branchId = await getBranchId(connection, branch, shopId);
-        const itemId = await getItemId(connection, item, productCategory, company);
-        
-        // Delete the most recent entry for this specific item FOR TODAY
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-        
-        const [deleteResult] = await connection.execute(`
-            DELETE FROM inventory_entries 
-            WHERE user_id = ? AND shop_id = ? AND branch_id = ? AND item_id = ?
-            AND DATE(entry_date) = ?
-            ORDER BY entry_date DESC 
-            LIMIT 1
-        `, [USER_ID, shopId, branchId, itemId, today]);
-        
-        await connection.commit();
-        
-        if (deleteResult.affectedRows === 0) {
-            res.json({
-                success: false,
-                message: `No entry found to delete for item "${item}" (${company}) in ${shop} - ${branch}`,
-                deletedEntries: 0
-            });
-        } else {
-            res.json({
-                success: true,
-                message: SUCCESS_MESSAGES.ITEM_DELETED(item, company, shop, branch),
-                deletedEntries: deleteResult.affectedRows,
-                data: {
-                    shop: shop,
-                    branch: branch,
-                    category: productCategory,
-                    company: company,
-                    item: item,
-                    status: 'deleted'
-                }
-            });
-        }
-        
-    } catch (error) {
-        await connection.rollback();
-        console.error('Error deleting inventory:', error);
-        res.status(500).json({ error: error.message || 'Failed to delete inventory' });
-    } finally {
-        connection.release();
-    }
-});
-
 // Get inventory summary by product category
 router.get('/inventory-summary', async (req, res) => {
     try {
@@ -244,7 +173,7 @@ router.get('/inventory-summary', async (req, res) => {
                 b.branch_name as branch,
                 u.name as pic,
                 ie.amount,
-                ie.entry_date,
+                ie.created_at as entry_date,
                 ie.notes
             FROM inventory_entries ie
             JOIN users u ON ie.user_id = u.id
@@ -274,16 +203,16 @@ router.get('/inventory-summary', async (req, res) => {
         }
         
         if (startDate) {
-            query += ' AND DATE(ie.entry_date) >= ?';
+            query += ' AND DATE(ie.created_at) >= ?';
             params.push(startDate);
         }
         
         if (endDate) {
-            query += ' AND DATE(ie.entry_date) <= ?';
+            query += ' AND DATE(ie.created_at) <= ?';
             params.push(endDate);
         }
         
-        query += ' ORDER BY ie.entry_date DESC, pc.category_code';
+        query += ' ORDER BY ie.created_at DESC, pc.category_code';
         
         const [rows] = await pool.execute(query, params);
         
@@ -320,15 +249,20 @@ router.get('/inventory-summary', async (req, res) => {
     }
 });
 
-// Get all inventory entries (for debugging/admin)
+// FIXED: Get all inventory entries with optional filtering
 router.get('/inventory-entries', async (req, res) => {
     try {
-        const { limit = 100, offset = 0 } = req.query;
+        // Get parameters
+        const requestedLimit = parseInt(req.query.limit) || 1000;
+        const filterShop = req.query.shop;
+        const filterBranch = req.query.branch;
+        const filterDate = req.query.date;
         
-        const [rows] = await pool.execute(`
+        // Build query with optional WHERE conditions - USING created_at for time
+        let query = `
             SELECT 
                 ie.id,
-                ie.entry_date,
+                ie.created_at as entry_date,
                 u.name as pic,
                 s.shop_name as shop,
                 b.branch_name as branch,
@@ -344,14 +278,55 @@ router.get('/inventory-entries', async (req, res) => {
             JOIN items i ON ie.item_id = i.id
             JOIN product_categories pc ON i.product_category_id = pc.id
             JOIN companies c ON i.company_id = c.id
-            ORDER BY ie.entry_date DESC
-            LIMIT ? OFFSET ?
-        `, [parseInt(limit), parseInt(offset)]);
+            WHERE 1=1
+        `;
         
-        res.json(rows);
+        const params = [];
+        
+        // Add shop filter if provided
+        if (filterShop) {
+            query += ` AND s.shop_name = ?`;
+            params.push(filterShop);
+        }
+        
+        // Add branch filter if provided
+        if (filterBranch) {
+            query += ` AND b.branch_name = ?`;
+            params.push(filterBranch);
+        }
+        
+        // Add date filter if provided - using created_at for date comparison
+        if (filterDate) {
+            query += ` AND DATE(ie.created_at) = ?`;
+            params.push(filterDate);
+        }
+        
+        // FIXED: Proper sorting - shop, branch, category, company (ALL at end), then time
+        query += ` ORDER BY s.shop_name ASC, b.branch_name ASC, pc.category_code ASC, CASE WHEN c.company_code = 'ALL' THEN 'ZZZ' ELSE c.company_code END ASC, ie.created_at ASC LIMIT ${Math.min(requestedLimit, 2000)}`;
+        
+        console.log('Final query:', query);
+        console.log('Params:', params);
+        
+        const [rows] = await pool.execute(query, params);
+        
+        // Debug: Log first few results to verify sorting
+        if (rows.length > 0) {
+            console.log('First 5 sorted results:');
+            rows.slice(0, 5).forEach((row, i) => {
+                console.log(`${i+1}. ${row.shop} → ${row.branch} → ${row.category} → ${row.company} → ${row.item || 'Total: ' + row.amount}`);
+            });
+        }
+        
+        // Ensure we always return an array
+        const entries = Array.isArray(rows) ? rows : [];
+        
+        res.json(entries);
+        
     } catch (error) {
         console.error('Error fetching inventory entries:', error);
-        res.status(500).json({ error: 'Failed to fetch inventory entries' });
+        
+        // Return empty array to prevent frontend filter errors
+        res.json([]);
     }
 });
 

@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 // Import route modules
@@ -18,35 +19,64 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Serve static files (HTML, CSS, JS) from current directory
+app.use(express.static(__dirname));
+
 // Test database connection on startup
 testConnection();
 
-// Routes
+// API Routes
 app.use('/api', shopRoutes);      // /api/shops, /api/branches
 app.use('/api', itemRoutes);      // /api/items, /api/verify-item, /api/search-items
 app.use('/api', inventoryRoutes); // /api/add-inventory, /api/delete-inventory
 app.use('/api', statsRoutes);     // /api/health, /api/stats, /api/reports
 
+// Root route - redirect to mobile app
+app.get('/', (req, res) => {
+    res.redirect('/inventory-app.html');
+});
+
+// Get server IP addresses for mobile access
+function getNetworkIPs() {
+    const { networkInterfaces } = require('os');
+    const nets = networkInterfaces();
+    const ips = [];
+
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+            if (net.family === 'IPv4' && !net.internal) {
+                ips.push(net.address);
+            }
+        }
+    }
+    return ips;
+}
+
 // Start server
 app.listen(PORT, () => {
+    const ips = getNetworkIPs();
+    
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log('📊 Connected to MySQL database "lg"');
-    console.log('\n📋 Available endpoints:');
+    
+    console.log('\n📱 MOBILE ACCESS:');
+    console.log('   Put inventory-app.html in this folder, then access from phone:');
+    
+    if (ips.length > 0) {
+        ips.forEach(ip => {
+            console.log(`   📱 http://${ip}:${PORT}/inventory-app.html`);
+        });
+    } else {
+        console.log('   📱 Find your IP address and use: http://YOUR-IP:3000/inventory-app.html');
+    }
+    
+    console.log('\n📋 API Endpoints:');
     console.log('  GET  /api/health - Health check');
     console.log('  GET  /api/stats - Database statistics');
-    console.log('  GET  /api/shops - Get all active shops');
-    console.log('  GET  /api/branches - Get all branches');
-    console.log('  GET  /api/branches/:shopName - Get branches for shop');
-    console.log('  GET  /api/product-categories - Get product categories');
-    console.log('  GET  /api/companies - Get companies');
-    console.log('  GET  /api/items - Get filtered items');
-    console.log('  GET  /api/verify-item/:itemCode - Verify item existence');
-    console.log('  GET  /api/search-items/:searchTerm - Search items');
-    console.log('  POST /api/add-inventory - Add inventory count');
-    console.log('  DELETE /api/delete-inventory - Delete inventory item');
-    console.log('  GET  /api/inventory-summary - Get inventory summary');
-    console.log('  GET  /api/inventory-entries - Get all inventory entries');
-    console.log('  GET  /api/reports/inventory-by-date - Advanced reporting');
+    console.log('  GET  /inventory-app.html - Mobile GUI');
+    console.log('  POST /api/add-inventory - Add inventory');
+    console.log('  DELETE /api/delete-inventory - Delete inventory');
 });
 
 // Graceful shutdown
