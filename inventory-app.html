@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>📱 LG Inventory</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            color: #333;
+        }
+
+        .app-container {
+            max-width: 100vw;
+            min-height: 100vh;
+            background: white;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 25px 20px 120px 20px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 18px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            transition: border-color 0.3s ease;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+        }
+
+        .form-control:disabled {
+            background: #f8f9fa;
+            color: #6c757d;
+            border-color: #e9ecef;
+        }
+
+        .amount-field {
+            display: none;
+        }
+
+        .amount-field.show {
+            display: block;
+        }
+
+        .item-field {
+            display: none;
+        }
+
+        .item-field.show {
+            display: block;
+        }
+
+        .action-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 20px;
+            border-top: 1px solid #e0e0e0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        }
+
+        .btn-update {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+            min-height: 56px;
+        }
+
+        .btn-update:active {
+            transform: scale(0.98);
+        }
+
+        .btn-update:disabled {
+            background: #6c757d;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            background: white;
+            color: #667eea;
+            transition: all 0.3s ease;
+            min-height: 50px;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:active {
+            transform: scale(0.98);
+            background: #f8f9fa;
+        }
+
+        .status-message {
+            position: fixed;
+            top: 80px;
+            left: 15px;
+            right: 15px;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 500;
+            text-align: center;
+            z-index: 1000;
+            transform: translateY(-100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .status-message.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* Choice Modal */
+        .choice-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .choice-modal.show {
+            display: flex;
+        }
+
+        .choice-content {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 300px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .choice-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .choice-subtitle {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .choice-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .choice-btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .choice-btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e0e0e0;
+        }
+
+        .choice-btn:active {
+            transform: scale(0.98);
+        }
+
+        .choice-cancel {
+            margin-top: 10px;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📱 LG Inventory</h1>
+            <p>Select location and scan items</p>
+        </div>
+
+        <!-- Main Form -->
+        <div class="form-container">
+            <form id="inventoryForm">
+                <!-- Step 1: Shop -->
+                <div class="form-group">
+                    <label class="form-label" for="shop">1. Shop *</label>
+                    <select class="form-control" id="shop" required onchange="onShopChange()">
+                        <option value="">Select Shop</option>
+                    </select>
+                </div>
+
+                <!-- Step 2: Branch -->
+                <div class="form-group">
+                    <label class="form-label" for="branch">2. Branch *</label>
+                    <select class="form-control" id="branch" required disabled>
+                        <option value="">First select shop</option>
+                    </select>
+                </div>
+
+                <!-- Step 3: Category -->
+                <div class="form-group">
+                    <label class="form-label" for="productCategory">3. Product Category *</label>
+                    <select class="form-control" id="productCategory" required onchange="onCategoryChange()">
+                        <option value="">Select Category</option>
+                    </select>
+                </div>
+
+                <!-- Step 4: Company -->
+                <div class="form-group">
+                    <label class="form-label" for="company">4. Company *</label>
+                    <select class="form-control" id="company" required onchange="onCompanyChange()">
+                        <option value="">Select Company</option>
+                    </select>
+                </div>
+
+                <!-- Step 5a: Amount (if ALL company) -->
+                <div class="form-group amount-field" id="amountField">
+                    <label class="form-label" for="amount">5. Total Amount *</label>
+                    <input type="number" class="form-control" id="amount" min="0" placeholder="Enter total count">
+                </div>
+
+                <!-- Step 5b: Item (if specific company) -->
+                <div class="form-group item-field" id="itemField">
+                    <label class="form-label" for="item">5. Item *</label>
+                    <select class="form-control" id="item">
+                        <option value="">Select Item</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="status-message"></div>
+
+        <!-- Choice Modal -->
+        <div id="choiceModal" class="choice-modal">
+            <div class="choice-content">
+                <div class="choice-title">📥 Download Report</div>
+                <div class="choice-subtitle">What would you like to download?</div>
+                
+                <div class="choice-buttons">
+                    <button class="choice-btn choice-btn-primary" onclick="downloadWork('branch')">
+                        📍 Current Branch Only
+                    </button>
+                    <button class="choice-btn choice-btn-secondary" onclick="downloadWork('day')">
+                        📅 Whole Day (All Branches)
+                    </button>
+                </div>
+                
+                <button class="choice-cancel" onclick="closeChoiceModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Action Area -->
+        <div class="action-area">
+            <button type="button" class="btn-update" id="updateBtn" onclick="updateInventory()" disabled>
+                ✅ Update Inventory
+            </button>
+            
+            <button type="button" class="btn-secondary" onclick="showDownloadChoice()">
+                📥 Download Today's Work
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'http://localhost:3000/api';
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        async function initializeApp() {
+            showStatus('🔄 Loading data...', 'info');
+            
+            try {
+                await Promise.all([
+                    loadShops(),
+                    loadProductCategories(),
+                    loadCompanies()
+                ]);
+                
+                showStatus('✅ Ready to scan!', 'success');
+                setTimeout(hideStatus, 2000);
+            } catch (error) {
+                showStatus('❌ Failed to load: ' + error.message, 'error');
+            }
+        }
+
+        // Event Handlers
+        function onShopChange() {
+            const shop = document.getElementById('shop').value;
+            const branchSelect = document.getElementById('branch');
+            
+            if (shop) {
+                branchSelect.disabled = false;
+                branchSelect.innerHTML = '<option value="">Select Branch</option>';
+                loadBranchesForShop(shop);
+            } else {
+                branchSelect.disabled = true;
+                branchSelect.innerHTML = '<option value="">First select shop</option>';
+            }
+            
+            checkFormComplete();
+        }
+
+        function onCategoryChange() {
+            checkFormComplete();
+        }
+
+        function onCompanyChange() {
+            const company = document.getElementById('company').value;
+            const amountField = document.getElementById('amountField');
+            const itemField = document.getElementById('itemField');
+            const itemSelect = document.getElementById('item');
+            
+            // Reset fields
+            document.getElementById('amount').value = '';
+            itemSelect.innerHTML = '<option value="">Select Item</option>';
+            
+            if (company === 'ALL') {
+                // Show amount field
+                amountField.classList.add('show');
+                itemField.classList.remove('show');
+            } else if (company) {
+                // Show item field and load items
+                amountField.classList.remove('show');
+                itemField.classList.add('show');
+                loadItemsForCompany();
+            } else {
+                // Hide both fields
+                amountField.classList.remove('show');
+                itemField.classList.remove('show');
+            }
+            
+            checkFormComplete();
+        }
+
+        // Data Loading Functions
+        async function loadShops() {
+            const response = await fetch(`${API_BASE}/shops`);
+            const shops = await response.json();
+            
+            const shopSelect = document.getElementById('shop');
+            shopSelect.innerHTML = '<option value="">Select Shop</option>';
+            
+            shops.forEach(shop => {
+                shopSelect.innerHTML += `<option value="${shop.name}">${shop.name}</option>`;
+            });
+        }
+
+        async function loadBranchesForShop(shopName) {
+            try {
+                const response = await fetch(`${API_BASE}/branches/${encodeURIComponent(shopName)}`);
+                const branches = await response.json();
+                
+                const branchSelect = document.getElementById('branch');
+                branchSelect.innerHTML = '<option value="">Select Branch</option>';
+                branches.forEach(branch => {
+                    branchSelect.innerHTML += `<option value="${branch}">${branch}</option>`;
+                });
+            } catch (error) {
+                showStatus('❌ Failed to load branches', 'error');
+            }
+        }
+
+        async function loadProductCategories() {
+            const response = await fetch(`${API_BASE}/product-categories`);
+            const categories = await response.json();
+            
+            const categorySelect = document.getElementById('productCategory');
+            categorySelect.innerHTML = '<option value="">Select Category</option>';
+            
+            categories.forEach(category => {
+                categorySelect.innerHTML += `<option value="${category.name}">${category.name}</option>`;
+            });
+        }
+
+        async function loadCompanies() {
+            const response = await fetch(`${API_BASE}/companies`);
+            const companies = await response.json();
+            
+            const companySelect = document.getElementById('company');
+            companySelect.innerHTML = '<option value="">Select Company</option>';
+            
+            companies.forEach(company => {
+                companySelect.innerHTML += `<option value="${company.name}">${company.name}</option>`;
+            });
+        }
+
+        async function loadItemsForCompany() {
+            const category = document.getElementById('productCategory').value;
+            const company = document.getElementById('company').value;
+            
+            if (!category || !company || company === 'ALL') return;
+            
+            try {
+                const params = new URLSearchParams({
+                    productCategory: category,
+                    company: company
+                });
+                
+                const response = await fetch(`${API_BASE}/items?${params}`);
+                const items = await response.json();
+                
+                const itemSelect = document.getElementById('item');
+                itemSelect.innerHTML = '<option value="">Select Item</option>';
+                items.forEach(item => {
+                    itemSelect.innerHTML += `<option value="${item}">${item}</option>`;
+                });
+            } catch (error) {
+                showStatus('❌ Failed to load items', 'error');
+            }
+        }
+
+        // Form Validation
+        function checkFormComplete() {
+            const shop = document.getElementById('shop').value;
+            const branch = document.getElementById('branch').value;
+            const category = document.getElementById('productCategory').value;
+            const company = document.getElementById('company').value;
+            
+            let isComplete = shop && branch && category && company;
+            
+            if (company === 'ALL') {
+                const amount = document.getElementById('amount').value;
+                isComplete = isComplete && amount !== '';
+            } else if (company) {
+                const item = document.getElementById('item').value;
+                isComplete = isComplete && item;
+            }
+            
+            document.getElementById('updateBtn').disabled = !isComplete;
+        }
+
+        // Add event listeners to all form fields
+        document.addEventListener('change', checkFormComplete);
+        document.addEventListener('input', checkFormComplete);
+
+        // Form Submission
+        async function updateInventory() {
+            const data = {
+                shop: document.getElementById('shop').value,
+                branch: document.getElementById('branch').value,
+                productCategory: document.getElementById('productCategory').value,
+                company: document.getElementById('company').value
+            };
+            
+            if (data.company === 'ALL') {
+                data.amount = parseInt(document.getElementById('amount').value);
+            } else {
+                data.item = document.getElementById('item').value;
+            }
+            
+            try {
+                showStatus('🔄 Updating...', 'info');
+                
+                const response = await fetch(`${API_BASE}/add-inventory`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showStatus(`✅ ${result.message}`, 'success');
+                    
+                    // Reset only company, amount, and item fields
+                    // Keep shop, branch, and category
+                    document.getElementById('company').value = '';
+                    document.getElementById('amount').value = '';
+                    document.getElementById('item').innerHTML = '<option value="">Select Item</option>';
+                    document.getElementById('amountField').classList.remove('show');
+                    document.getElementById('itemField').classList.remove('show');
+                    
+                    checkFormComplete();
+                } else {
+                    showStatus(`❌ ${result.error}`, 'error');
+                }
+                
+            } catch (error) {
+                showStatus('❌ Connection error', 'error');
+            }
+        }
+
+        // Show download choice modal
+        function showDownloadChoice() {
+            document.getElementById('choiceModal').classList.add('show');
+        }
+
+        function closeChoiceModal() {
+            document.getElementById('choiceModal').classList.remove('show');
+        }
+
+        // Download work based on choice
+        async function downloadWork(scope) {
+            closeChoiceModal();
+            
+            try {
+                showStatus('📥 Preparing Excel file...', 'info');
+                
+                // Get today's date in YYYY-MM-DD format
+                const today = new Date().toISOString().split('T')[0];
+                
+                // Fetch today's inventory entries
+                const response = await fetch(`${API_BASE}/inventory-entries?limit=1000`);
+                const allEntries = await response.json();
+                
+                // Filter entries for today only
+                let todaysEntries = allEntries.filter(entry => 
+                    entry.entry_date.split('T')[0] === today
+                );
+                
+                // If scope is 'branch', filter by current branch
+                if (scope === 'branch') {
+                    const currentShop = document.getElementById('shop').value;
+                    const currentBranch = document.getElementById('branch').value;
+                    
+                    if (!currentShop || !currentBranch) {
+                        showStatus('❌ Please select shop and branch first', 'error');
+                        return;
+                    }
+                    
+                    todaysEntries = todaysEntries.filter(entry => 
+                        entry.shop === currentShop && entry.branch === currentBranch
+                    );
+                }
+                
+                if (todaysEntries.length === 0) {
+                    const scopeText = scope === 'branch' ? 'for this branch' : '';
+                    showStatus(`📝 No work done today ${scopeText} yet`, 'info');
+                    setTimeout(hideStatus, 3000);
+                    return;
+                }
+                
+                // Generate and download Excel file
+                generateTodaysWorkExcel(todaysEntries, today, scope);
+                
+                const scopeText = scope === 'branch' ? 'for current branch' : 'for whole day';
+                showStatus(`📥 Downloaded! ${todaysEntries.length} entries ${scopeText}`, 'success');
+                setTimeout(hideStatus, 3000);
+                
+            } catch (error) {
+                showStatus('❌ Failed to download: ' + error.message, 'error');
+            }
+        }
+
+        function generateTodaysWorkExcel(entries, date, scope) {
+            // Prepare Excel data with headers
+            const headers = [
+                'Time', 'Shop', 'Branch', 'Category', 
+                'Company', 'Item/Total', 'Type', 'PIC'
+            ];
+            
+            // Convert entries to Excel rows
+            const excelData = entries.map(entry => {
+                const time = new Date(entry.entry_date).toLocaleTimeString('en-US', {
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return [
+                    time,
+                    entry.shop,
+                    entry.branch,
+                    entry.category,
+                    entry.company,
+                    entry.company === 'ALL' ? `${entry.amount} total` : entry.item,
+                    entry.company === 'ALL' ? 'Category Total' : 'Item Found',
+                    entry.pic
+                ];
+            });
+            
+            // Add headers at the top
+            excelData.unshift(headers);
+            
+            // Convert to CSV format (Excel compatible)
+            const csvContent = excelData.map(row => 
+                row.map(field => `"${field}"`).join(',')
+            ).join('\n');
+            
+            // Create and download file
+            const blob = new Blob([csvContent], { 
+                type: 'text/csv;charset=utf-8;' 
+            });
+            
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            // Create filename based on scope
+            let filename;
+            if (scope === 'branch') {
+                const shop = entries[0]?.shop || 'Unknown';
+                const branch = entries[0]?.branch || 'Unknown';
+                filename = `${shop}_${branch}_Work_${date}.csv`;
+            } else {
+                filename = `My_Daily_Work_${date}.csv`;
+            }
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            URL.revokeObjectURL(url);
+        }
+
+        // Status Management
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message status-${type} show`;
+        }
+
+        function hideStatus() {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
