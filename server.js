@@ -1,7 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-require('dotenv').config();
+// Only load .env in development
+if (process.env.NODE_ENV !== 'production') {
+    require('dotenv').config();
+} else {
+    console.log('🚀 Production mode - using Railway environment variables');
+    console.log('Available Railway MySQL vars:', Object.keys(process.env).filter(k => k.includes('MYSQL')));
+}
 
 // Import route modules
 const shopRoutes = require('./routes/shops');
