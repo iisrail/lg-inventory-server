@@ -19,10 +19,6 @@ SET UNIQUE_CHECKS = 0;
 SET AUTOCOMMIT = 0;
 
 
--- Dumping database structure for lg
-CREATE DATABASE IF NOT EXISTS `lg` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `lg`;
-
 -- Dumping structure for table lg.branches
 CREATE TABLE IF NOT EXISTS `branches` (
   `id` int NOT NULL AUTO_INCREMENT,
