@@ -74,6 +74,9 @@ function getNetworkIPs() {
     return ips;
 }
 
+console.log('🔍 Railway PORT variable:', process.env.PORT);
+console.log('🔍 Final PORT value:', PORT);
+
 // Start server
 app.listen(PORT, () => {
     const ips = getNetworkIPs();
