@@ -78,7 +78,7 @@ console.log('🔍 Railway PORT variable:', process.env.PORT);
 console.log('🔍 Final PORT value:', PORT);
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => { 
     const ips = getNetworkIPs();
     
     console.log(`🚀 Server running on http://localhost:${PORT}`);
