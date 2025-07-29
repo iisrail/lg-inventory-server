@@ -1,3 +1,18 @@
+const fs = require('fs');
+console.log('📁 Root directory files:', fs.readdirSync(__dirname));
+
+try {
+    console.log('📁 Routes directory files:', fs.readdirSync('./routes'));
+} catch (err) {
+    console.log('❌ Routes directory not found:', err.message);
+}
+
+try {
+    console.log('📁 Config directory files:', fs.readdirSync('./config'));
+} catch (err) {
+    console.log('❌ Config directory not found:', err.message);
+}
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -64,7 +79,7 @@ app.listen(PORT, () => {
     const ips = getNetworkIPs();
     
     console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log('📊 Connected to MySQL database "lg"');
+    console.log('📊 Database connection status logged above');
     
     console.log('\n📱 MOBILE ACCESS:');
     console.log('   Put inventory-app.html in this folder, then access from phone:');
