@@ -737,13 +737,17 @@
             // Add headers at the top
             excelData.unshift(headers);
             
-            // Convert to CSV format (Excel compatible)
+            // Convert to CSV format with UTF-8 BOM for Excel compatibility
             const csvContent = excelData.map(row => 
                 row.map(field => `"${field}"`).join(',')
             ).join('\n');
             
-            // Create and download file
-            const blob = new Blob([csvContent], { 
+            // Add UTF-8 BOM for proper Excel encoding
+            const BOM = '\uFEFF';
+            const csvWithBOM = BOM + csvContent;
+            
+            // Create and download file with proper encoding
+            const blob = new Blob([csvWithBOM], { 
                 type: 'text/csv;charset=utf-8;' 
             });
             
