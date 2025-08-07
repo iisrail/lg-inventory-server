@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>📱 Система Инвентаризации</title>
-    <meta name="description" content="Мобильная система учета товаров и инвентаризации">
+    <title>📱Inventory Management</title>
     <style>
         * {
             margin: 0;
@@ -28,7 +27,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #4285f4 0%, #1e88e5 100%);
+            background: linear-gradient(135deg, #4285f4 0%, #1976d2 100%);
             color: white;
             padding: 15px;
             text-align: center;
@@ -291,8 +290,8 @@
     <div class="app-container">
         <!-- Header -->
         <div class="header">
-            <h1>📱 Система Инвентаризации</h1>
-            <p>Выберите локацию и сканируйте товары</p>
+            <h1>📱 Inventory Management</h1>
+            <p>Select location and manage inventory</p>
         </div>
 
         <!-- Main Form -->
@@ -300,54 +299,54 @@
             <form id="inventoryForm" autocomplete="off">
                 <!-- Step 1: Shop -->
                 <div class="form-group">
-                    <label class="form-label" for="shop">1. Магазин *</label>
+                    <label class="form-label" for="shop">1. Shop *</label>
                     <select class="form-control" id="shop" required onchange="onShopChange()">
-                        <option value="">Выберите магазин</option>
+                        <option value="">Select Shop</option>
                     </select>
                 </div>
 
                 <!-- Step 2: Branch -->
                 <div class="form-group">
-                    <label class="form-label" for="branch">2. Филиал *</label>
+                    <label class="form-label" for="branch">2. Branch *</label>
                     <select class="form-control" id="branch" required disabled>
-                        <option value="">Сначала выберите магазин</option>
+                        <option value="">First select shop</option>
                     </select>
                 </div>
 
                 <!-- Step 3: Category -->
                 <div class="form-group">
-                    <label class="form-label" for="productCategory">3. Категория товара *</label>
+                    <label class="form-label" for="productCategory">3. Product Category *</label>
                     <select class="form-control" id="productCategory" required onchange="onCategoryChange()">
-                        <option value="">Выберите категорию</option>
+                        <option value="">Select Category</option>
                     </select>
                 </div>
 
                 <!-- Step 4: Company -->
                 <div class="form-group">
-                    <label class="form-label" for="company">4. Производитель *</label>
+                    <label class="form-label" for="company">4. Company *</label>
                     <select class="form-control" id="company" required onchange="onCompanyChange()">
-                        <option value="">Выберите производителя</option>
+                        <option value="">Select Company</option>
                     </select>
                 </div>
 
                 <!-- Step 5a: Amount (if ALL company) -->
                 <div class="form-group amount-field" id="amountField">
-                    <label class="form-label" for="amount">5. Общее количество *</label>
-                    <input type="number" class="form-control" id="amount" min="0" placeholder="Введите общее количество" autocomplete="off">
+                    <label class="form-label" for="amount">5. Total Amount *</label>
+                    <input type="number" class="form-control" id="amount" min="0" placeholder="Enter total count" autocomplete="off">
                 </div>
 
                 <!-- Step 5b: Item (if specific company) -->
                 <div class="form-group item-field" id="itemField">
-                    <label class="form-label" for="item">5. Товар *</label>
+                    <label class="form-label" for="item">5. Item *</label>
                     <select class="form-control" id="item">
-                        <option value="">Выберите товар</option>
+                        <option value="">Select Item</option>
                     </select>
                 </div>
 
                 <!-- Step 6: Notes (optional) -->
                 <div class="form-group">
-                    <label class="form-label" for="notes">6. Примечания (не обязательно)</label>
-                    <input type="text" class="form-control" id="notes" placeholder="Добавить примечания..." 
+                    <label class="form-label" for="notes">6. Notes (optional)</label>
+                    <input type="text" class="form-control" id="notes" placeholder="Add notes..." 
                            autocomplete="off" autocorrect="off" spellcheck="false" onfocus="scrollToNotes()">
                 </div>
             </form>
@@ -359,20 +358,20 @@
         <!-- Choice Modal -->
         <div id="choiceModal" class="choice-modal">
             <div class="choice-content">
-                <div class="choice-title">📥 Скачать отчет</div>
-                <div class="choice-subtitle">Что вы хотите скачать?</div>
+                <div class="choice-title">📥 Download Report</div>
+                <div class="choice-subtitle">What would you like to download?</div>
                 
                 <div class="choice-buttons">
                     <button class="choice-btn choice-btn-primary" onclick="downloadWork('branch')">
-                        📍 Только текущий филиал
+                        📍 Current Branch Only
                     </button>
                     <button class="choice-btn choice-btn-secondary" onclick="downloadWork('day')">
-                        📅 Весь день (все филиалы)
+                        📅 Whole Day (All Branches)
                     </button>
                 </div>
                 
                 <button class="choice-cancel" onclick="closeChoiceModal()">
-                    Отмена
+                    Cancel
                 </button>
             </div>
         </div>
@@ -380,17 +379,17 @@
         <!-- Bottom Action Area -->
         <div class="action-area">
             <button type="button" class="btn-update" id="updateBtn" onclick="updateInventory()" disabled>
-                ✅ Обновить инвентарь
+                ✅ Save Inventory
             </button>
             
             <button type="button" class="btn-secondary" onclick="showDownloadChoice()">
-                📥 Скачать сегодняшнюю работу
+                📥 Download Today's Work
             </button>
         </div>
     </div>
 
     <script>
-        // API Configuration - Use relative URLs for mobile compatibility
+        // API Configuration
         const API_BASE = '/api';
 
         // Initialize app
@@ -399,7 +398,7 @@
         });
 
         async function initializeApp() {
-            showStatus('🔄 Загрузка данных...', 'info');
+            showStatus('🔄 Loading data...', 'info');
             
             try {
                 await Promise.all([
@@ -408,10 +407,10 @@
                     loadCompanies()
                 ]);
                 
-                showStatus('✅ Готово к сканированию!', 'success');
+                showStatus('✅ Ready to use!', 'success');
                 setTimeout(hideStatus, 2000);
             } catch (error) {
-                showStatus('❌ Ошибка загрузки: ' + error.message, 'error');
+                showStatus('❌ Failed to load: ' + error.message, 'error');
             }
         }
 
@@ -422,11 +421,11 @@
             
             if (shop) {
                 branchSelect.disabled = false;
-                branchSelect.innerHTML = '<option value="">Выберите филиал</option>';
+                branchSelect.innerHTML = '<option value="">Select Branch</option>';
                 loadBranchesForShop(shop);
             } else {
                 branchSelect.disabled = true;
-                branchSelect.innerHTML = '<option value="">Сначала выберите магазин</option>';
+                branchSelect.innerHTML = '<option value="">First select shop</option>';
             }
             
             checkFormComplete();
@@ -444,7 +443,7 @@
             
             // Reset fields
             document.getElementById('amount').value = '';
-            itemSelect.innerHTML = '<option value="">Выберите товар</option>';
+            itemSelect.innerHTML = '<option value="">Select Item</option>';
             
             if (company === 'ALL') {
                 // Show amount field
@@ -470,7 +469,7 @@
             const shops = await response.json();
             
             const shopSelect = document.getElementById('shop');
-            shopSelect.innerHTML = '<option value="">Выберите магазин</option>';
+            shopSelect.innerHTML = '<option value="">Select Shop</option>';
             
             shops.forEach(shop => {
                 shopSelect.innerHTML += `<option value="${shop.name}">${shop.name}</option>`;
@@ -483,12 +482,12 @@
                 const branches = await response.json();
                 
                 const branchSelect = document.getElementById('branch');
-                branchSelect.innerHTML = '<option value="">Выберите филиал</option>';
+                branchSelect.innerHTML = '<option value="">Select Branch</option>';
                 branches.forEach(branch => {
                     branchSelect.innerHTML += `<option value="${branch}">${branch}</option>`;
                 });
             } catch (error) {
-                showStatus('❌ Ошибка загрузки филиалов', 'error');
+                showStatus('❌ Failed to load branches', 'error');
             }
         }
 
@@ -497,7 +496,7 @@
             const categories = await response.json();
             
             const categorySelect = document.getElementById('productCategory');
-            categorySelect.innerHTML = '<option value="">Выберите категорию</option>';
+            categorySelect.innerHTML = '<option value="">Select Category</option>';
             
             categories.forEach(category => {
                 categorySelect.innerHTML += `<option value="${category.name}">${category.name}</option>`;
@@ -509,7 +508,7 @@
             const companies = await response.json();
             
             const companySelect = document.getElementById('company');
-            companySelect.innerHTML = '<option value="">Выберите производителя</option>';
+            companySelect.innerHTML = '<option value="">Select Company</option>';
             
             companies.forEach(company => {
                 companySelect.innerHTML += `<option value="${company.name}">${company.name}</option>`;
@@ -532,12 +531,12 @@
                 const items = await response.json();
                 
                 const itemSelect = document.getElementById('item');
-                itemSelect.innerHTML = '<option value="">Выберите товар</option>';
+                itemSelect.innerHTML = '<option value="">Select Item</option>';
                 items.forEach(item => {
                     itemSelect.innerHTML += `<option value="${item}">${item}</option>`;
                 });
             } catch (error) {
-                showStatus('❌ Ошибка загрузки товаров', 'error');
+                showStatus('❌ Failed to load items', 'error');
             }
         }
 
@@ -582,7 +581,7 @@
             }
             
             try {
-                showStatus('🔄 Обновление...', 'info');
+                showStatus('🔄 Saving...', 'info');
                 
                 const response = await fetch(`${API_BASE}/add-inventory`, {
                     method: 'POST',
@@ -595,8 +594,7 @@
                 if (response.ok) {
                     showStatus(`✅ ${result.message}`, 'success');
                     
-                    // Reset fields but keep location
-                    document.getElementById('company').value = '';
+                    // Reset only specific fields
                     document.getElementById('amount').value = '';
                     document.getElementById('item').value = '';
                     document.getElementById('notes').value = '';
@@ -612,7 +610,7 @@
                 }
                 
             } catch (error) {
-                showStatus('❌ Ошибка соединения', 'error');
+                showStatus('❌ Connection error', 'error');
             }
         }
 
@@ -630,7 +628,7 @@
             closeChoiceModal();
             
             try {
-                showStatus('📥 Подготовка Excel файла...', 'info');
+                showStatus('📥 Preparing Excel file...', 'info');
                 
                 // Get today's date in YYYY-MM-DD format
                 const today = new Date().toISOString().split('T')[0];
@@ -644,7 +642,7 @@
                     const currentBranch = document.getElementById('branch').value;
                     
                     if (!currentShop || !currentBranch) {
-                        showStatus('❌ Сначала выберите магазин и филиал', 'error');
+                        showStatus('❌ Please select shop and branch first', 'error');
                         return;
                     }
                     
@@ -657,13 +655,13 @@
                 const todaysEntries = await response.json();
                 
                 if (!Array.isArray(todaysEntries)) {
-                    showStatus('❌ Получены неверные данные с сервера', 'error');
+                    showStatus('❌ Invalid data received from server', 'error');
                     return;
                 }
                 
                 if (todaysEntries.length === 0) {
-                    const scopeText = scope === 'branch' ? 'по этому филиалу' : '';
-                    showStatus(`📝 Сегодня работа ${scopeText} еще не выполнялась`, 'info');
+                    const scopeText = scope === 'branch' ? 'for this branch' : '';
+                    showStatus(`📝 No work done today ${scopeText} yet`, 'info');
                     setTimeout(hideStatus, 3000);
                     return;
                 }
@@ -671,20 +669,20 @@
                 // Generate and download Excel file
                 generateTodaysWorkExcel(todaysEntries, today, scope);
                 
-                const scopeText = scope === 'branch' ? 'по текущему филиалу' : 'за весь день';
-                showStatus(`📥 Скачано! ${todaysEntries.length} записей ${scopeText}`, 'success');
+                const scopeText = scope === 'branch' ? 'for current branch' : 'for whole day';
+                showStatus(`📥 Downloaded! ${todaysEntries.length} entries ${scopeText}`, 'success');
                 setTimeout(hideStatus, 3000);
                 
             } catch (error) {
-                showStatus('❌ Ошибка скачивания: ' + error.message, 'error');
+                showStatus('❌ Failed to download: ' + error.message, 'error');
             }
         }
 
         function generateTodaysWorkExcel(entries, date, scope) {
-            // Excel data with Russian headers
+            // Excel data with English headers
             const headers = [
-                'Время', 'Магазин', 'Филиал', 'Категория', 
-                'Производитель', 'Товар', 'Количество', 'Примечания', 'Сотрудник'
+                'Time', 'Shop', 'Branch', 'Category', 
+                'Company', 'Item', 'Amount', 'Notes', 'Staff'
             ];
             
             // Convert entries to Excel rows
@@ -727,9 +725,9 @@
                     entry.branch,
                     entry.category,
                     entry.company,
-                    itemValue,     // Item column (empty for category totals)
-                    amountValue,   // Amount column (1 for items, actual number for totals)
-                    entry.notes || '',  // Notes column
+                    itemValue,
+                    amountValue,
+                    entry.notes || '',
                     entry.pic
                 ];
             });
@@ -737,17 +735,13 @@
             // Add headers at the top
             excelData.unshift(headers);
             
-            // Convert to CSV format with UTF-8 BOM for Excel compatibility
+            // Convert to CSV format (Excel compatible)
             const csvContent = excelData.map(row => 
                 row.map(field => `"${field}"`).join(',')
             ).join('\n');
             
-            // Add UTF-8 BOM for proper Excel encoding
-            const BOM = '\uFEFF';
-            const csvWithBOM = BOM + csvContent;
-            
-            // Create and download file with proper encoding
-            const blob = new Blob([csvWithBOM], { 
+            // Create and download file
+            const blob = new Blob([csvContent], { 
                 type: 'text/csv;charset=utf-8;' 
             });
             
@@ -757,11 +751,11 @@
             // Create filename based on scope
             let filename;
             if (scope === 'branch') {
-                const shop = entries[0]?.shop || 'Неизвестно';
-                const branch = entries[0]?.branch || 'Неизвестно';
-                filename = `${shop}_${branch}_Работа_${date}.csv`;
+                const shop = entries[0]?.shop || 'Unknown';
+                const branch = entries[0]?.branch || 'Unknown';
+                filename = `${shop}_${branch}_Work_${date}.csv`;
             } else {
-                filename = `Моя_Работа_${date}.csv`;
+                filename = `Daily_Work_${date}.csv`;
             }
             
             link.setAttribute('href', url);
@@ -795,7 +789,7 @@
                     behavior: 'smooth', 
                     block: 'center' 
                 });
-            }, 300); // Small delay to let keyboard appear
+            }, 300);
         }
     </script>
 </body>
