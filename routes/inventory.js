@@ -336,7 +336,8 @@ router.get('/inventory-summary', async (req, res) => {
     }
 });
 
-// Get all inventory entries with optional filtering
+// FOR DEBUGGING DATE FILTERING
+
 router.get('/inventory-entries', async (req, res) => {
     try {
         // Get parameters
@@ -344,9 +345,17 @@ router.get('/inventory-entries', async (req, res) => {
         const filterShop = req.query.shop;
         const filterBranch = req.query.branch;
         const filterDate = req.query.date;
+        const startDate = req.query.startDate;
+        const endDate = req.query.endDate;
         const user_id = req.query.user_id;
 
-        // Build query with optional WHERE conditions - USING created_at for time
+        console.log('🔍 API Request Parameters:');
+        console.log('   - filterDate:', filterDate);
+        console.log('   - startDate:', startDate);
+        console.log('   - endDate:', endDate);
+        console.log('   - user_id:', user_id);
+
+        // Build query with optional WHERE conditions
         let query = `
             SELECT 
                 ie.id,
@@ -383,10 +392,22 @@ router.get('/inventory-entries', async (req, res) => {
             params.push(filterBranch);
         }
         
-        // Add date filter if provided - using created_at for date comparison
+        // FIXED DATE FILTERING LOGIC
         if (filterDate) {
+            // Single date filter (for "today")
             query += ` AND DATE(ie.created_at) = ?`;
             params.push(filterDate);
+            console.log('📅 Filtering by single date:', filterDate);
+        } else if (startDate && endDate) {
+            // Date range filter (for "previous month")
+            query += ` AND DATE(ie.created_at) >= ? AND DATE(ie.created_at) <= ?`;
+            params.push(startDate, endDate);
+            console.log('📅 Filtering by date range:', startDate, 'to', endDate);
+        } else if (startDate) {
+            // From start date to now (for "current month" and "current week")
+            query += ` AND DATE(ie.created_at) >= ?`;
+            params.push(startDate);
+            console.log('📅 Filtering from start date:', startDate, 'to now');
         }
 
         if (user_id) {
@@ -397,7 +418,17 @@ router.get('/inventory-entries', async (req, res) => {
         // Sort by created_at (newest first)
         query += ` ORDER BY ie.created_at DESC LIMIT ${Math.min(requestedLimit, 2000)}`;
         
+        console.log('🔍 Final SQL Query:', query);
+        console.log('🔍 Query Parameters:', params);
+        
         const [rows] = await pool.execute(query, params);
+        
+        console.log('📊 Database returned', rows.length, 'entries');
+        if (rows.length > 0) {
+            console.log('📅 Date range in results:');
+            console.log('   - First entry:', rows[0].entry_date);
+            console.log('   - Last entry:', rows[rows.length - 1].entry_date);
+        }
         
         // Ensure we always return an array
         const entries = Array.isArray(rows) ? rows : [];

@@ -1,5 +1,5 @@
 // ========================================
-// REPORTS MODULE (reports.js)
+// REPORTS MODULE (reports.js) - FIXED
 // ========================================
 
 // ========================================
@@ -45,18 +45,22 @@ async function downloadWork(scope) {
             console.log('📅 Requesting WEEK entries for user', currentUser.name, '(from Sunday):', startDate);
         } else if (scope === 'month') {
             const today = new Date();
-            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-            const startDate = startOfMonth.toISOString().split('T')[0];
+            // FIX: Ensure we get the correct current month
+            const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const startDate = startOfCurrentMonth.toISOString().split('T')[0];
             
             apiUrl += `&startDate=${startDate}`;
             dateRange = 'Current Month';
-            console.log('📅 Requesting MONTH entries for user', currentUser.name, '(from 1st):', startDate);
+            console.log('📅 Requesting CURRENT MONTH entries for user', currentUser.name);
+            console.log('📅 Start date:', startDate, '(should be 1st of', today.toLocaleString('default', { month: 'long' }), today.getFullYear() + ')');
         } else if (scope === 'last-month') {
+            // FIX: Get actual previous month dates
             const today = new Date();
-            const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-            const startDate = startOfLastMonth.toISOString().split('T')[0];
-            const endDate = endOfLastMonth.toISOString().split('T')[0];
+            const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+            
+            const startDate = firstDayLastMonth.toISOString().split('T')[0];
+            const endDate = lastDayLastMonth.toISOString().split('T')[0];
             
             apiUrl += `&startDate=${startDate}&endDate=${endDate}`;
             dateRange = 'Previous Month';
@@ -84,7 +88,7 @@ async function downloadWork(scope) {
             return;
         }
         
-        // Sort by date (newest first) - no client-side filtering needed!
+        // Sort by date (newest first)
         allEntries.sort((a, b) => {
             return new Date(b.entry_date) - new Date(a.entry_date);
         });
@@ -101,22 +105,6 @@ async function downloadWork(scope) {
         showStatus('❌ Failed to download: ' + error.message, 'error');
     }
 }
-
-// ========================================
-// DATE FILTERING FUNCTIONS (REMOVED - DONE BY DATABASE)
-// ========================================
-
-// These functions are no longer needed since filtering is done by the database
-// The API endpoint will handle the date filtering with SQL queries
-
-// Old client-side filtering functions removed:
-// - filterEntriesByDate()
-// - filterTodayEntries() 
-// - filterWeekEntries()
-// - filterMonthEntries()
-// - filterLastMonthEntries()
-
-// The database will filter using WHERE DATE(created_at) = ? queries
 
 // ========================================
 // EXCEL GENERATION
@@ -182,7 +170,11 @@ function generateWorkExcel(entries, dateRange, scope) {
             filename = `${userName}_Inventory_Month_${todayStr}.csv`;
             break;
         case 'last-month':
-            filename = `${userName}_Inventory_Last_Month_${todayStr}.csv`;
+            // FIX: Better filename for previous month
+            const lastMonth = new Date();
+            lastMonth.setMonth(lastMonth.getMonth() - 1);
+            const lastMonthStr = lastMonth.toISOString().substr(0, 7).replace('-', '_'); // YYYY_MM
+            filename = `${userName}_Inventory_Last_Month_${lastMonthStr}.csv`;
             break;
         default:
             filename = `${userName}_Inventory_Report_${todayStr}.csv`;
@@ -197,17 +189,4 @@ function generateWorkExcel(entries, dateRange, scope) {
     document.body.removeChild(link);
     
     URL.revokeObjectURL(url);
-}
-
-// ========================================
-// DATE HELPER FUNCTIONS (SIMPLIFIED)
-// ========================================
-
-// These are no longer needed since database handles filtering
-// Keeping only for reference if needed later
-
-function getYesterdayUTC() {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return yesterday.toISOString().split('T')[0];
 }
