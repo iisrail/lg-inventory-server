@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>📱 LG Inventory</title>
+    <!-- Main styles -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Header-specific styles -->
+    <link rel="stylesheet" href="header.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📱 LG Inventory</h1>
+            <p>Select location and scan multiple items</p>
+            <div class="user-info" id="userInfo" style="display: none;" onclick="logout()" title="Click to logout"></div>
+            <!-- Logout button is now hidden - user info handles logout -->
+            <button class="logout-btn" onclick="logout()" style="display: none;" id="logoutBtn">
+                🚪 Logout
+            </button>
+        </div>
+
+        <!-- Main Form -->
+        <div class="form-container">
+            <form id="inventoryForm" autocomplete="off">
+                <!-- Step 1: Shop -->
+                <div class="form-group">
+                    <label class="form-label" for="shop">1. Shop *</label>
+                    <select class="form-control" id="shop" required onchange="onShopChange()">
+                        <option value="">Select Shop</option>
+                    </select>
+                </div>
+
+                <!-- Step 2: Branch -->
+                <div class="form-group">
+                    <label class="form-label" for="branch">2. Branch *</label>
+                    <select class="form-control" id="branch" required disabled onchange="onBranchChange()">
+                        <option value="">First select shop</option>
+                    </select>
+                </div>
+
+                <!-- Step 3: Category -->
+                <div class="form-group">
+                    <label class="form-label" for="productCategory">3. Product Category *</label>
+                    <select class="form-control" id="productCategory" required disabled onchange="onCategoryChange()">
+                        <option value="">First select branch</option>
+                    </select>
+                </div>
+
+                <!-- Step 4: Company -->
+                <div class="form-group">
+                    <label class="form-label" for="company">4. Company *</label>
+                    <select class="form-control" id="company" required disabled onchange="onCompanyChange()">
+                        <option value="">First select category</option>
+                    </select>
+                </div>
+
+                <!-- Step 5a: Amount (if ALL company) -->
+                <div class="form-group amount-field" id="amountField">
+                    <label class="form-label" for="amount">5. Total Amount *</label>
+                    <input type="number" class="form-control" id="amount" min="0" placeholder="Enter total count" 
+                           autocomplete="off" oninput="checkFormComplete()" onchange="checkFormComplete()">
+                </div>
+
+                <!-- Step 5b: Multiple Items (if specific company) -->
+                <div class="form-group item-field" id="itemField">
+                    <label class="form-label">5. Select Items *</label>
+                    
+                    <!-- Quick action buttons -->
+                    <div class="quick-actions">
+                        <button type="button" class="quick-btn" onclick="selectAllItems()">Select All</button>
+                        <button type="button" class="quick-btn" onclick="clearAllItems()">Clear All</button>
+                    </div>
+                    
+                    <!-- Search box -->
+                    <input type="text" class="item-search" id="itemSearch" placeholder="🔍 Search items..." 
+                           oninput="filterItems()" autocomplete="off">
+                    
+                    <!-- Multi-select container -->
+                    <div class="multi-select-container" id="itemsContainer">
+                        <div class="no-items">No items available</div>
+                    </div>
+                    
+                    <!-- Selected items summary -->
+                    <div class="selected-summary" id="selectedSummary">
+                        <div class="selected-count" id="selectedCount">0 items selected</div>
+                        <div class="selected-list" id="selectedList"></div>
+                    </div>
+                </div>
+
+                <!-- Step 6: Notes (optional) -->
+                <div class="form-group">
+                    <label class="form-label" for="notes">6. Notes (optional)</label>
+                    <input type="text" class="form-control" id="notes" placeholder="Add notes..." 
+                           autocomplete="off" autocorrect="off" spellcheck="false" onfocus="scrollToNotes()">
+                </div>
+            </form>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="status-message"></div>
+
+        <!-- Choice Modal -->
+        <div id="choiceModal" class="choice-modal">
+            <div class="choice-content">
+                <div class="choice-title">📥 Download Report</div>
+                <div class="choice-subtitle">Select your report type</div>
+                
+                <div class="choice-buttons">
+                    <button class="choice-btn choice-btn-primary" onclick="downloadWork('today')">
+                        📅 Today
+                    </button>
+                    <button class="choice-btn choice-btn-secondary" onclick="downloadWork('week')">
+                        📊 Current Week
+                    </button>
+                    <button class="choice-btn choice-btn-secondary" onclick="downloadWork('month')">
+                        📆 Current Month
+                    </button>
+                    <button class="choice-btn choice-btn-secondary" onclick="downloadWork('last-month')">
+                        📅 Previous Month
+                    </button>
+                </div>
+                
+                <button class="choice-cancel" onclick="closeChoiceModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Action Area -->
+        <div class="action-area">
+            <button type="button" class="btn-update" id="updateBtn" onclick="updateInventory()" disabled>
+                ✅ Update Inventory
+            </button>
+            
+            <button type="button" class="btn-secondary" onclick="showDownloadChoice()">
+                📥 Download Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>📱 LG Inventory</h1>
+                <p>Please login to continue</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="login-group">
+                    <label class="login-label" for="username">Username</label>
+                    <input type="text" class="login-input" id="username" required 
+                           autocomplete="username" placeholder="Enter your username">
+                </div>
+                
+                <div class="login-group">
+                    <label class="login-label" for="password">Password</label>
+                    <input type="password" class="login-input" id="password" required 
+                           autocomplete="current-password" placeholder="Enter your password">
+                </div>
+                
+                <button type="submit" class="login-btn" id="loginBtn">
+                    🔐 Login
+                </button>
+                
+                <div id="loginError" class="login-error"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Include JavaScript Modules -->
+    <script src="auth.js"></script>
+    <script src="data-loader.js"></script>
+    <script src="form-handler.js"></script>
+    <script src="item-selector.js"></script>
+    <script src="reports.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

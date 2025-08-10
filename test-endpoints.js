@@ -64,6 +64,8 @@ async function testAllEndpoints() {
     console.log('🎉 All tests completed!');
 }
 
+
+
 // Run tests
 testAllEndpoints().catch(console.error);
 

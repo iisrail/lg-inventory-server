@@ -4,20 +4,23 @@ const { pool } = require('../config/database');
 const { USER_ID, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../config/constants');
 const { validateInventoryFields, getShopId, getBranchId, getItemId, getCategoryItemId } = require('../utils/helpers');
 
-// Add inventory count - Two modes: specific item or category total
+// Add inventory count - UPDATED to accept user_id and pic from frontend
 router.post('/add-inventory', async (req, res) => {
     const connection = await pool.getConnection();
     
     try {
         await connection.beginTransaction();
         
-        const { shop, branch, productCategory, company, item, amount, notes } = req.body;
+        const { shop, branch, productCategory, company, item, amount, user_id, pic, notes } = req.body;
         
         // Basic validation
         const validation = validateInventoryFields(req.body);
         if (!validation.isValid) {
             return res.status(400).json({ error: validation.error });
         }
+        
+        // Use provided user_id or fallback to constant USER_ID
+        const finalUserId = user_id || USER_ID;
         
         // Determine inventory mode
         const isItemMode = item && company && (company !== 'ALL');
@@ -77,7 +80,7 @@ router.post('/add-inventory', async (req, res) => {
             SELECT id FROM inventory_entries 
             WHERE user_id = ? AND shop_id = ? AND branch_id = ? AND item_id = ? 
             AND DATE(entry_date) = ?
-        `, [USER_ID, shopId, branchId, itemId, today]);
+        `, [finalUserId, shopId, branchId, itemId, today]);
         
         let result;
         let action;
@@ -86,22 +89,31 @@ router.post('/add-inventory', async (req, res) => {
             // UPDATE existing record
             const existingId = existingRows[0].id;
             
-            await connection.execute(`
-                UPDATE inventory_entries 
-                SET amount = ?, notes = ?, entry_date = CURDATE()
-                WHERE id = ?
-            `, [finalAmount, notes, existingId]);
+            // Update with notes if provided
+            if (notes) {
+                await connection.execute(`
+                    UPDATE inventory_entries 
+                    SET amount = ?, entry_date = CURDATE(), created_at = NOW(), notes = ?
+                    WHERE id = ?
+                `, [finalAmount, notes, existingId]);
+            } else {
+                await connection.execute(`
+                    UPDATE inventory_entries 
+                    SET amount = ?, entry_date = CURDATE(), created_at = NOW()
+                    WHERE id = ?
+                `, [finalAmount, existingId]);
+            }
             
             result = { insertId: existingId };
             action = 'updated';
             
         } else {
-            // INSERT new record
+            // INSERT new record with created_at timestamp
             const [insertResult] = await connection.execute(`
                 INSERT INTO inventory_entries 
-                (user_id, shop_id, branch_id, item_id, amount, notes, entry_date) 
-                VALUES (?, ?, ?, ?, ?, ?, CURDATE())
-            `, [USER_ID, shopId, branchId, itemId, finalAmount, notes]);
+                (user_id, shop_id, branch_id, item_id, amount, entry_date, created_at, notes) 
+                VALUES (?, ?, ?, ?, ?, CURDATE(), NOW(), ?)
+            `, [finalUserId, shopId, branchId, itemId, finalAmount, notes || null]);
             
             result = insertResult;
             action = 'created';
@@ -133,12 +145,14 @@ router.post('/add-inventory', async (req, res) => {
             mode: mode,
             action: action,
             entryId: result.insertId,
+            pic: pic, // Return the PIC info
             data: {
                 shop: shop,
                 branch: branch,
                 category: productCategory,
                 date: today,
-                notes: notes,
+                user_id: finalUserId,
+                pic: pic,
                 ...(mode === 'item' ? { 
                     company: company, 
                     item: item, 
@@ -146,7 +160,8 @@ router.post('/add-inventory', async (req, res) => {
                     display: '✓'
                 } : { 
                     totalAmount: finalAmount 
-                })
+                }),
+                ...(notes && { notes: notes })
             }
         });
         
@@ -154,6 +169,78 @@ router.post('/add-inventory', async (req, res) => {
         await connection.rollback();
         console.error('Error adding inventory:', error);
         res.status(500).json({ error: error.message || 'Failed to add inventory' });
+    } finally {
+        connection.release();
+    }
+});
+
+// Delete inventory item entry (keep your existing delete route)
+router.delete('/delete-inventory', async (req, res) => {
+    const connection = await pool.getConnection();
+    
+    try {
+        await connection.beginTransaction();
+        
+        const { shop, branch, productCategory, company, item } = req.body;
+        
+        // Basic validation for delete
+        if (!shop || !branch || !productCategory || !company || !item) {
+            return res.status(400).json({
+                error: 'Missing required fields: shop, branch, productCategory, company, item'
+            });
+        }
+        
+        // Only works for item mode (not category totals)
+        if (company === 'ALL') {
+            return res.status(400).json({
+                error: ERROR_MESSAGES.CANNOT_DELETE_CATEGORY
+            });
+        }
+        
+        // Get IDs
+        const shopId = await getShopId(connection, shop);
+        const branchId = await getBranchId(connection, branch, shopId);
+        const itemId = await getItemId(connection, item, productCategory, company);
+        
+        // Delete the most recent entry for this specific item FOR TODAY
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        
+        const [deleteResult] = await connection.execute(`
+            DELETE FROM inventory_entries 
+            WHERE user_id = ? AND shop_id = ? AND branch_id = ? AND item_id = ?
+            AND DATE(entry_date) = ?
+            ORDER BY created_at DESC 
+            LIMIT 1
+        `, [USER_ID, shopId, branchId, itemId, today]);
+        
+        await connection.commit();
+        
+        if (deleteResult.affectedRows === 0) {
+            res.json({
+                success: false,
+                message: `No entry found to delete for item "${item}" (${company}) in ${shop} - ${branch}`,
+                deletedEntries: 0
+            });
+        } else {
+            res.json({
+                success: true,
+                message: SUCCESS_MESSAGES.ITEM_DELETED(item, company, shop, branch),
+                deletedEntries: deleteResult.affectedRows,
+                data: {
+                    shop: shop,
+                    branch: branch,
+                    category: productCategory,
+                    company: company,
+                    item: item,
+                    status: 'deleted'
+                }
+            });
+        }
+        
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error deleting inventory:', error);
+        res.status(500).json({ error: error.message || 'Failed to delete inventory' });
     } finally {
         connection.release();
     }
@@ -249,7 +336,7 @@ router.get('/inventory-summary', async (req, res) => {
     }
 });
 
-// FIXED: Get all inventory entries with optional filtering
+// Get all inventory entries with optional filtering
 router.get('/inventory-entries', async (req, res) => {
     try {
         // Get parameters
@@ -257,7 +344,8 @@ router.get('/inventory-entries', async (req, res) => {
         const filterShop = req.query.shop;
         const filterBranch = req.query.branch;
         const filterDate = req.query.date;
-        
+        const user_id = req.query.user_id;
+
         // Build query with optional WHERE conditions - USING created_at for time
         let query = `
             SELECT 
@@ -300,22 +388,16 @@ router.get('/inventory-entries', async (req, res) => {
             query += ` AND DATE(ie.created_at) = ?`;
             params.push(filterDate);
         }
+
+        if (user_id) {
+            query += ' AND ie.user_id = ?';
+            params.push(user_id);
+        }
         
-        // FIXED: Proper sorting - shop, branch, category, company (ALL at end), then time
-        query += ` ORDER BY s.shop_name ASC, b.branch_name ASC, pc.category_code ASC, CASE WHEN c.company_code = 'ALL' THEN 'ZZZ' ELSE c.company_code END ASC, ie.created_at ASC LIMIT ${Math.min(requestedLimit, 2000)}`;
-        
-        console.log('Final query:', query);
-        console.log('Params:', params);
+        // Sort by created_at (newest first)
+        query += ` ORDER BY ie.created_at DESC LIMIT ${Math.min(requestedLimit, 2000)}`;
         
         const [rows] = await pool.execute(query, params);
-        
-        // Debug: Log first few results to verify sorting
-        if (rows.length > 0) {
-            console.log('First 5 sorted results:');
-            rows.slice(0, 5).forEach((row, i) => {
-                console.log(`${i+1}. ${row.shop} → ${row.branch} → ${row.category} → ${row.company} → ${row.item || 'Total: ' + row.amount}`);
-            });
-        }
         
         // Ensure we always return an array
         const entries = Array.isArray(rows) ? rows : [];

@@ -1,0 +1,519 @@
+/* ========================================
+   MAIN STYLES (styles.css)
+   ========================================*/
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 0;
+    color: #333;
+}
+
+.app-container {
+    max-width: 100vw;
+    min-height: 100vh;
+    background: white;
+    margin: 0;
+}
+
+/* ========================================
+   FORM STYLES
+   ========================================*/
+
+.form-container {
+    padding: 15px 15px 180px 15px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px 10px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 16px;
+    background: white;
+    transition: border-color 0.3s ease;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.form-control:disabled {
+    background: #f8f9fa;
+    color: #6c757d;
+    border-color: #e9ecef;
+}
+
+/* ========================================
+   CONDITIONAL FORM FIELDS
+   ========================================*/
+
+.amount-field {
+    display: none;
+}
+
+.amount-field.show {
+    display: block;
+}
+
+.item-field {
+    display: none;
+}
+
+.item-field.show {
+    display: block;
+}
+
+/* ========================================
+   MULTI-SELECT ITEM COMPONENTS
+   ========================================*/
+
+.multi-select-container {
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    background: white;
+    min-height: 120px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 8px;
+}
+
+.multi-select-container:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.item-checkbox {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    margin: 2px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    user-select: none;
+}
+
+.item-checkbox:hover {
+    background-color: #f8f9fa;
+}
+
+.item-checkbox.selected {
+    background-color: #e7f3ff;
+    border: 1px solid #667eea;
+}
+
+.item-checkbox input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.item-code {
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #333;
+}
+
+.selected-summary {
+    margin-top: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+    display: none;
+}
+
+.selected-summary.show {
+    display: block;
+}
+
+.selected-count {
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 5px;
+}
+
+.selected-list {
+    font-size: 12px;
+    color: #666;
+    max-height: 60px;
+    overflow-y: auto;
+}
+
+.item-search {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.item-search:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.no-items {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+    font-style: italic;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.quick-btn {
+    padding: 6px 12px;
+    border: 1px solid #667eea;
+    border-radius: 6px;
+    background: white;
+    color: #667eea;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quick-btn:active {
+    background: #667eea;
+    color: white;
+}
+
+/* ========================================
+   ACTION AREA & BUTTONS
+   ========================================*/
+
+.action-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 20px;
+    border-top: 1px solid #e0e0e0;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+}
+
+.btn-update {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+    min-height: 56px;
+}
+
+.btn-update:active {
+    transform: scale(0.98);
+}
+
+.btn-update:disabled {
+    background: #6c757d;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #667eea;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    background: white;
+    color: #667eea;
+    transition: all 0.3s ease;
+    min-height: 50px;
+    margin-top: 10px;
+}
+
+.btn-secondary:active {
+    transform: scale(0.98);
+    background: #f8f9fa;
+}
+
+/* ========================================
+   STATUS MESSAGES
+   ========================================*/
+
+.status-message {
+    position: fixed;
+    top: 60px;
+    left: 10px;
+    right: 10px;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 500;
+    text-align: center;
+    z-index: 1000;
+    transform: translateY(-80px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.status-message.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.status-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.status-info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* ========================================
+   MODAL COMPONENTS
+   ========================================*/
+
+.choice-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.choice-modal.show {
+    display: flex;
+}
+
+.choice-content {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    max-width: 300px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.choice-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.choice-subtitle {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 25px;
+    line-height: 1.4;
+}
+
+.choice-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.choice-btn {
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.choice-btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.choice-btn-secondary {
+    background: #f8f9fa;
+    color: #333;
+    border: 2px solid #e0e0e0;
+}
+
+.choice-btn:active {
+    transform: scale(0.98);
+}
+
+.choice-cancel {
+    margin-top: 15px;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* ========================================
+   LOGIN SCREEN
+   ========================================*/
+
+.login-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-screen.hidden {
+    display: none;
+}
+
+.login-container {
+    background: white;
+    border-radius: 20px;
+    padding: 40px 30px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+.login-header h1 {
+    color: #333;
+    font-size: 1.8em;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.login-header p {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 1.1em;
+}
+
+.login-form {
+    text-align: left;
+}
+
+.login-group {
+    margin-bottom: 20px;
+}
+
+.login-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 16px;
+}
+
+.login-input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e1e5e9;
+    border-radius: 12px;
+    font-size: 16px;
+    background: white;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.login-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.login-btn {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.login-btn:active {
+    transform: scale(0.98);
+}
+
+.login-btn:disabled {
+    background: #6c757d;
+    box-shadow: none;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.login-error {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    font-size: 14px;
+    display: none;
+}
+
+.login-error.show {
+    display: block;
+}
